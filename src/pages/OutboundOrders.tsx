@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { OrdersTable } from "@/components/orders/OrdersTable";
+import { OrderFormModal } from "@/components/orders/OrderFormModal";
 import { mockOutboundOrders } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter } from "lucide-react";
 import { Order, OrderStatus } from "@/types/orders";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -18,6 +20,9 @@ export default function OutboundOrders() {
   const [orders, setOrders] = useState<Order[]>(mockOutboundOrders);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const { toast } = useToast();
 
   const handleStatusChange = (orderId: string, status: OrderStatus) => {
     setOrders(prev => 
@@ -25,6 +30,35 @@ export default function OutboundOrders() {
         order.id === orderId ? { ...order, status } : order
       )
     );
+    toast({
+      title: "Stato aggiornato",
+      description: `L'ordine è stato aggiornato a "${status}"`,
+    });
+  };
+
+  const handleSaveOrder = (order: Order) => {
+    setOrders(prev => {
+      const exists = prev.find(o => o.id === order.id);
+      if (exists) {
+        return prev.map(o => o.id === order.id ? order : o);
+      }
+      return [order, ...prev];
+    });
+    toast({
+      title: editingOrder ? "Ordine modificato" : "Ordine creato",
+      description: `Ordine ${order.orderNumber} ${editingOrder ? "aggiornato" : "creato"} con successo`,
+    });
+    setEditingOrder(null);
+  };
+
+  const handleViewOrder = (order: Order) => {
+    setEditingOrder(order);
+    setModalOpen(true);
+  };
+
+  const handleNewOrder = () => {
+    setEditingOrder(null);
+    setModalOpen(true);
   };
 
   const filteredOrders = orders.filter(order => {
@@ -64,7 +98,7 @@ export default function OutboundOrders() {
               </SelectContent>
             </Select>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleNewOrder}>
             <Plus className="h-4 w-4" />
             Nuovo Ordine
           </Button>
@@ -74,6 +108,16 @@ export default function OutboundOrders() {
         <OrdersTable 
           orders={filteredOrders} 
           onStatusChange={handleStatusChange}
+          onView={handleViewOrder}
+        />
+
+        {/* Modal */}
+        <OrderFormModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          order={editingOrder}
+          type="outbound"
+          onSave={handleSaveOrder}
         />
       </div>
     </MainLayout>
