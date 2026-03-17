@@ -25,7 +25,7 @@ const statusColors: Record<string, string> = {
 
 export default function Projects() {
   const { isAdmin } = useAuth();
-  const [projects, setProjects] = useState<(Project & { pm_name?: string })[]>([]);
+  const [projects, setProjects] = useState<(Project & { pm_name?: string; allocations_summary?: { name: string; certification: string; quantity: number }[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState("all");
@@ -41,12 +41,17 @@ export default function Projects() {
     setLoading(true);
     const { data } = await supabase
       .from("projects")
-      .select("*, profiles!projects_pm_id_fkey(full_name)")
+      .select("*, profiles!projects_pm_id_fkey(full_name), project_allocations(quantity, products(name, certification))")
       .order("handover_date", { ascending: true });
 
     const mapped = (data || []).map((p: any) => ({
       ...p,
       pm_name: p.profiles?.full_name || "—",
+      allocations_summary: (p.project_allocations || []).map((a: any) => ({
+        name: a.products?.name || "—",
+        certification: a.products?.certification || "—",
+        quantity: a.quantity,
+      })),
     }));
     setProjects(mapped);
     setLoading(false);
@@ -137,6 +142,7 @@ export default function Projects() {
                   {isAdmin && <th className="text-left p-4 font-medium text-muted-foreground">PM</th>}
                   <th className="text-left p-4 font-medium text-muted-foreground">Handover</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Stato</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Hardware Assegnati</th>
                   <th className="p-4"></th>
                 </tr>
               </thead>
@@ -159,6 +165,19 @@ export default function Projects() {
                         <Badge variant="outline" className={cn("border", statusColors[project.status])}>
                           {project.status}
                         </Badge>
+                      </td>
+                      <td className="p-4">
+                        {(project.allocations_summary || []).length === 0 ? (
+                          <span className="text-muted-foreground text-xs">Nessuno</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {(project.allocations_summary || []).map((a, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {a.certification} ×{a.quantity}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">
                         <Button size="sm" variant="outline" onClick={() => openEdit(project)} className="gap-1">
