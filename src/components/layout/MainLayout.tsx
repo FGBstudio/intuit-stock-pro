@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -11,6 +12,8 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
+  const { profile, signOut } = useAuth();
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -25,8 +28,11 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              {profile && (
+                <span className="text-sm text-muted-foreground">{profile.full_name}</span>
+              )}
+              <Button variant="ghost" size="icon" onClick={signOut}>
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </header>
