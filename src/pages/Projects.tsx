@@ -41,12 +41,17 @@ export default function Projects() {
     setLoading(true);
     const { data } = await supabase
       .from("projects")
-      .select("*, profiles!projects_pm_id_fkey(full_name)")
+      .select("*, profiles!projects_pm_id_fkey(full_name), project_allocations(quantity, products(name, certification))")
       .order("handover_date", { ascending: true });
 
     const mapped = (data || []).map((p: any) => ({
       ...p,
       pm_name: p.profiles?.full_name || "—",
+      allocations_summary: (p.project_allocations || []).map((a: any) => ({
+        name: a.products?.name || "—",
+        certification: a.products?.certification || "—",
+        quantity: a.quantity,
+      })),
     }));
     setProjects(mapped);
     setLoading(false);
