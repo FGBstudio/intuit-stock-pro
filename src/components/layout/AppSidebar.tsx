@@ -1,11 +1,10 @@
 import { 
   LayoutDashboard, 
-  ArrowDownToLine, 
-  ArrowUpFromLine, 
+  FolderKanban,
   Package, 
+  Truck,
   BarChart3,
   Settings,
-  Menu
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -24,15 +23,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const mainNavItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Ordini Inbound", url: "/inbound", icon: ArrowDownToLine },
-  { title: "Ordini Outbound", url: "/outbound", icon: ArrowUpFromLine },
-  { title: "Inventario", url: "/inventory", icon: Package },
-  { title: "Reportistica", url: "/reports", icon: BarChart3 },
+  { title: "Command Center", url: "/", icon: LayoutDashboard },
+  { title: "Projects", url: "/projects", icon: FolderKanban },
+  { title: "Inventory", url: "/inventory", icon: Package },
+  { title: "Supplier Orders", url: "/supplier-orders", icon: Truck },
+  { title: "Reports", url: "/reports", icon: BarChart3 },
 ];
 
 const settingsItems = [
-  { title: "Impostazioni", url: "/settings", icon: Settings },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -54,8 +53,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-semibold text-sidebar-foreground">StockFlow</span>
-              <span className="text-xs text-sidebar-foreground/60">Gestione Magazzino</span>
+              <span className="font-semibold text-sidebar-foreground">RetailOps</span>
+              <span className="text-xs text-sidebar-foreground/60">Supply Chain Platform</span>
             </div>
           )}
         </div>
@@ -64,7 +63,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider">
-            {!collapsed && "Menu Principale"}
+            {!collapsed && "Operations"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -94,7 +93,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs uppercase tracking-wider">
-            {!collapsed && "Sistema"}
+            {!collapsed && "System"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -127,7 +126,7 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="rounded-lg bg-sidebar-accent p-3">
             <p className="text-xs text-sidebar-foreground/70">
-              Versione 1.0.0
+              RetailOps v2.0
             </p>
           </div>
         )}
