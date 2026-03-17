@@ -167,6 +167,19 @@ export default function Projects() {
                         </Badge>
                       </td>
                       <td className="p-4">
+                        {(project.allocations_summary || []).length === 0 ? (
+                          <span className="text-muted-foreground text-xs">Nessuno</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {(project.allocations_summary || []).map((a, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {a.certification} ×{a.quantity}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
                         <Button size="sm" variant="outline" onClick={() => openEdit(project)} className="gap-1">
                           <Pencil className="h-3 w-3" /> Gestisci
                         </Button>
