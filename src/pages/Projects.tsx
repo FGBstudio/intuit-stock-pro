@@ -142,6 +142,7 @@ export default function Projects() {
                   {isAdmin && <th className="text-left p-4 font-medium text-muted-foreground">PM</th>}
                   <th className="text-left p-4 font-medium text-muted-foreground">Handover</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Stato</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Hardware Assegnati</th>
                   <th className="p-4"></th>
                 </tr>
               </thead>
