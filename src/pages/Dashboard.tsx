@@ -1,9 +1,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { mockProducts, mockProjects, mockAllocations, mockSupplierOrders } from "@/data/mockData";
 import { generateProcurementAlerts, getAtRiskProjects, getInstallationBacklog } from "@/services/forecasting";
+import { AuditTrail } from "@/components/admin/AuditTrail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, ShoppingCart, Clock, Truck, User } from "lucide-react";
+import { AlertTriangle, ShoppingCart, Clock, Truck, User, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -190,6 +191,20 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* SECTION 4: Audit Trail (Admin Only) */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+              <FileText className="h-4 w-4 text-accent-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">Audit Trail</h2>
+            <span className="text-sm text-muted-foreground ml-2">Modifiche recenti dei PM</span>
+          </div>
+          <div className="table-container p-4">
+            <AuditTrail />
+          </div>
         </section>
       </div>
     </MainLayout>
