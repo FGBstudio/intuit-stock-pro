@@ -14,16 +14,281 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          changed_field: string
+          created_at: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          project_id: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_field: string
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_field?: string
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          certification: Database["public"]["Enums"]["certification_type"]
+          created_at: string
+          id: string
+          name: string
+          quantity_in_stock: number
+          sku: string
+          supplier_lead_time_days: number
+          updated_at: string
+        }
+        Insert: {
+          certification: Database["public"]["Enums"]["certification_type"]
+          created_at?: string
+          id?: string
+          name: string
+          quantity_in_stock?: number
+          sku: string
+          supplier_lead_time_days?: number
+          updated_at?: string
+        }
+        Update: {
+          certification?: Database["public"]["Enums"]["certification_type"]
+          created_at?: string
+          id?: string
+          name?: string
+          quantity_in_stock?: number
+          sku?: string
+          supplier_lead_time_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_allocations: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          project_id: string
+          quantity: number
+          status: Database["public"]["Enums"]["allocation_status"]
+          target_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          project_id: string
+          quantity: number
+          status?: Database["public"]["Enums"]["allocation_status"]
+          target_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          project_id?: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["allocation_status"]
+          target_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_allocations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_allocations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client: string
+          created_at: string
+          handover_date: string
+          id: string
+          name: string
+          pm_id: string | null
+          region: Database["public"]["Enums"]["region"]
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string
+        }
+        Insert: {
+          client: string
+          created_at?: string
+          handover_date: string
+          id?: string
+          name: string
+          pm_id?: string | null
+          region: Database["public"]["Enums"]["region"]
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+        }
+        Update: {
+          client?: string
+          created_at?: string
+          handover_date?: string
+          id?: string
+          name?: string
+          pm_id?: string | null
+          region?: Database["public"]["Enums"]["region"]
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_pm_id_fkey"
+            columns: ["pm_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_orders: {
+        Row: {
+          created_at: string
+          expected_delivery_date: string
+          id: string
+          product_id: string
+          quantity_requested: number
+          status: Database["public"]["Enums"]["supplier_order_status"]
+          supplier_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expected_delivery_date: string
+          id?: string
+          product_id: string
+          quantity_requested: number
+          status?: Database["public"]["Enums"]["supplier_order_status"]
+          supplier_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expected_delivery_date?: string
+          id?: string
+          product_id?: string
+          quantity_requested?: number
+          status?: Database["public"]["Enums"]["supplier_order_status"]
+          supplier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      allocation_status:
+        | "Draft"
+        | "Allocated"
+        | "Requested"
+        | "Shipped"
+        | "Installed_Online"
+      app_role: "ADMIN" | "PM"
+      certification_type: "LEED" | "WELL" | "CO2" | "CO2-CO"
+      project_status: "Design" | "Construction" | "Completed" | "Cancelled"
+      region: "Europe" | "America" | "APAC" | "ME"
+      supplier_order_status: "Draft" | "Sent" | "In_Transit" | "Received"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +415,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      allocation_status: [
+        "Draft",
+        "Allocated",
+        "Requested",
+        "Shipped",
+        "Installed_Online",
+      ],
+      app_role: ["ADMIN", "PM"],
+      certification_type: ["LEED", "WELL", "CO2", "CO2-CO"],
+      project_status: ["Design", "Construction", "Completed", "Cancelled"],
+      region: ["Europe", "America", "APAC", "ME"],
+      supplier_order_status: ["Draft", "Sent", "In_Transit", "Received"],
+    },
   },
 } as const
