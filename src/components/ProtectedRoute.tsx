@@ -24,7 +24,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     // PM trying to access admin routes → redirect to PM portal
-    if (role === "PM") return <Navigate to="/pm" replace />;
+    if (role === "PM") return <Navigate to="/projects" replace />;
     return <Navigate to="/" replace />;
   }
 
