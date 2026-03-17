@@ -324,11 +324,23 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger><SelectValue placeholder="Seleziona prodotto" /></SelectTrigger>
                             <SelectContent>
-                              {products.map((p) => (
-                                <SelectItem key={p.id} value={p.id}>
-                                  {p.name} ({p.sku}) — Stock: {p.quantity_in_stock}
-                                </SelectItem>
-                              ))}
+                             {Object.entries(
+                               products.reduce((acc, p) => {
+                                 const cert = p.certification;
+                                 if (!acc[cert]) acc[cert] = [];
+                                 acc[cert].push(p);
+                                 return acc;
+                               }, {} as Record<string, Product[]>)
+                             ).map(([cert, prods]) => (
+                               <div key={cert}>
+                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{cert}</div>
+                                 {prods.map((p) => (
+                                   <SelectItem key={p.id} value={p.id}>
+                                     {p.name} ({p.sku}) — Stock: {p.quantity_in_stock}
+                                   </SelectItem>
+                                 ))}
+                               </div>
+                             ))}
                             </SelectContent>
                           </Select>
                         )}
