@@ -12,7 +12,6 @@ import SupplierOrders from "./pages/SupplierOrders";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
-import PMPortal from "./pages/PMPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,27 +27,19 @@ function AppRoutes() {
     );
   }
 
-  // Redirect authenticated users based on role
-  const HomeRedirect = () => {
-    if (!user) return <Navigate to="/login" replace />;
-    if (role === "PM") return <Navigate to="/pm" replace />;
-    return <Index />;
-  };
-
   return (
     <Routes>
-      <Route path="/login" element={user ? (role === "PM" ? <Navigate to="/pm" replace /> : <Navigate to="/" replace />) : <Login />} />
+      <Route path="/login" element={user ? (role === "PM" ? <Navigate to="/projects" replace /> : <Navigate to="/" replace />) : <Login />} />
       
       {/* Admin routes */}
       <Route path="/" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Index /></ProtectedRoute>} />
-      <Route path="/projects" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Projects /></ProtectedRoute>} />
       <Route path="/inventory" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Inventory /></ProtectedRoute>} />
       <Route path="/supplier-orders" element={<ProtectedRoute allowedRoles={["ADMIN"]}><SupplierOrders /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Reports /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Settings /></ProtectedRoute>} />
       
-      {/* PM route */}
-      <Route path="/pm" element={<ProtectedRoute allowedRoles={["PM"]}><PMPortal /></ProtectedRoute>} />
+      {/* Shared route: both ADMIN and PM */}
+      <Route path="/projects" element={<ProtectedRoute allowedRoles={["ADMIN", "PM"]}><Projects /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
