@@ -1,100 +1,84 @@
-import { Order, Product } from '@/types/orders';
+import { Product, Project, ProjectAllocation, SupplierOrder } from '@/types/index';
+
+// Helper: date relative to today
+const futureDate = (daysFromNow: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + daysFromNow);
+  return d.toISOString().split('T')[0];
+};
 
 export const mockProducts: Product[] = [
-  { id: '1', name: 'Laptop Dell XPS 15', sku: 'DELL-XPS15-001', category: 'Elettronica', quantity: 45, minStock: 10, location: 'A-01-01', unitPrice: 1299.99, lastUpdated: new Date('2024-01-15') },
-  { id: '2', name: 'Mouse Logitech MX Master', sku: 'LOG-MXM-002', category: 'Accessori', quantity: 120, minStock: 30, location: 'B-02-05', unitPrice: 89.99, lastUpdated: new Date('2024-01-14') },
-  { id: '3', name: 'Tastiera Meccanica RGB', sku: 'KEY-RGB-003', category: 'Accessori', quantity: 8, minStock: 15, location: 'B-02-06', unitPrice: 149.99, lastUpdated: new Date('2024-01-13') },
-  { id: '4', name: 'Monitor 27" 4K', sku: 'MON-4K27-004', category: 'Elettronica', quantity: 32, minStock: 8, location: 'A-01-02', unitPrice: 449.99, lastUpdated: new Date('2024-01-12') },
-  { id: '5', name: 'Webcam HD Pro', sku: 'CAM-HD-005', category: 'Accessori', quantity: 67, minStock: 20, location: 'C-03-01', unitPrice: 79.99, lastUpdated: new Date('2024-01-11') },
-  { id: '6', name: 'Cuffie Wireless', sku: 'AUD-WL-006', category: 'Audio', quantity: 5, minStock: 12, location: 'C-03-02', unitPrice: 199.99, lastUpdated: new Date('2024-01-10') },
-  { id: '7', name: 'Docking Station USB-C', sku: 'DOCK-USBC-007', category: 'Accessori', quantity: 28, minStock: 10, location: 'B-02-07', unitPrice: 179.99, lastUpdated: new Date('2024-01-09') },
-  { id: '8', name: 'SSD 1TB NVMe', sku: 'SSD-1TB-008', category: 'Componenti', quantity: 95, minStock: 25, location: 'D-04-01', unitPrice: 129.99, lastUpdated: new Date('2024-01-08') },
-];
-
-export const mockInboundOrders: Order[] = [
   {
-    id: '1',
-    orderNumber: 'IN-2024-001',
-    type: 'inbound',
-    status: 'pending',
-    supplier: 'Dell Technologies',
-    items: [
-      { id: '1', productId: '1', productName: 'Laptop Dell XPS 15', sku: 'DELL-XPS15-001', quantity: 20, unitPrice: 1100 },
-    ],
-    totalQuantity: 20,
-    createdAt: new Date('2024-01-15'),
-    expectedDate: new Date('2024-01-22'),
-    notes: 'Ordine urgente per rifornimento'
+    id: 'prod-1',
+    sku: 'MON-LEED-V2',
+    name: 'Monitor LEED v2',
+    certification: 'LEED',
+    quantityInStock: 18,
+    supplierLeadTimeDays: 45,
   },
   {
-    id: '2',
-    orderNumber: 'IN-2024-002',
-    type: 'inbound',
-    status: 'processing',
-    supplier: 'Logitech Europe',
-    items: [
-      { id: '2', productId: '2', productName: 'Mouse Logitech MX Master', sku: 'LOG-MXM-002', quantity: 50, unitPrice: 65 },
-      { id: '3', productId: '5', productName: 'Webcam HD Pro', sku: 'CAM-HD-005', quantity: 30, unitPrice: 55 },
-    ],
-    totalQuantity: 80,
-    createdAt: new Date('2024-01-14'),
-    expectedDate: new Date('2024-01-20'),
-  },
-  {
-    id: '3',
-    orderNumber: 'IN-2024-003',
-    type: 'inbound',
-    status: 'completed',
-    supplier: 'Samsung Electronics',
-    items: [
-      { id: '4', productId: '8', productName: 'SSD 1TB NVMe', sku: 'SSD-1TB-008', quantity: 100, unitPrice: 95 },
-    ],
-    totalQuantity: 100,
-    createdAt: new Date('2024-01-10'),
-    expectedDate: new Date('2024-01-15'),
+    id: 'prod-2',
+    sku: 'SENS-CO2-PRO',
+    name: 'Sensore CO2 Pro',
+    certification: 'CO2',
+    quantityInStock: 35,
+    supplierLeadTimeDays: 30,
   },
 ];
 
-export const mockOutboundOrders: Order[] = [
+export const mockProjects: Project[] = [
+  { id: 'prj-1', name: 'Miu Miu Dubai Mall', client: 'Miu Miu', region: 'ME', pm: 'Marco Rossi', handoverDate: futureDate(20), status: 'Construction' },
+  { id: 'prj-2', name: 'Prada San Diego', client: 'Prada', region: 'America', pm: 'Laura Bianchi', handoverDate: futureDate(25), status: 'Construction' },
+  { id: 'prj-3', name: 'Prada Champs-Élysées', client: 'Prada', region: 'Europe', pm: 'Sophie Dupont', handoverDate: futureDate(60), status: 'Design' },
+  { id: 'prj-4', name: 'Miu Miu Tokyo Ginza', client: 'Miu Miu', region: 'APAC', pm: 'Yuki Tanaka', handoverDate: futureDate(90), status: 'Design' },
+  { id: 'prj-5', name: 'Prada Milano Montenapoleone', client: 'Prada', region: 'Europe', pm: 'Marco Rossi', handoverDate: futureDate(120), status: 'Design' },
+  { id: 'prj-6', name: 'Miu Miu New York SoHo', client: 'Miu Miu', region: 'America', pm: 'Laura Bianchi', handoverDate: futureDate(150), status: 'Design' },
+  { id: 'prj-7', name: 'Prada Singapore MBS', client: 'Prada', region: 'APAC', pm: 'Yuki Tanaka', handoverDate: futureDate(45), status: 'Construction' },
+  { id: 'prj-8', name: 'Miu Miu London Bond St', client: 'Miu Miu', region: 'Europe', pm: 'Sophie Dupont', handoverDate: futureDate(35), status: 'Construction' },
+];
+
+export const mockAllocations: ProjectAllocation[] = [
+  // Miu Miu Dubai — needs 10 monitors + 8 sensors, handover in 20 days
+  { id: 'alloc-1', projectId: 'prj-1', productId: 'prod-1', quantity: 10, status: 'Draft', targetDate: futureDate(5) },
+  { id: 'alloc-2', projectId: 'prj-1', productId: 'prod-2', quantity: 8, status: 'Allocated', targetDate: futureDate(5) },
+  // Prada San Diego — needs 6 monitors + 5 sensors, handover in 25 days
+  { id: 'alloc-3', projectId: 'prj-2', productId: 'prod-1', quantity: 6, status: 'Draft', targetDate: futureDate(10) },
+  { id: 'alloc-4', projectId: 'prj-2', productId: 'prod-2', quantity: 5, status: 'Allocated', targetDate: futureDate(10) },
+  // Prada Champs-Élysées — 8 monitors + 6 sensors
+  { id: 'alloc-5', projectId: 'prj-3', productId: 'prod-1', quantity: 8, status: 'Draft', targetDate: futureDate(45) },
+  { id: 'alloc-6', projectId: 'prj-3', productId: 'prod-2', quantity: 6, status: 'Draft', targetDate: futureDate(45) },
+  // Miu Miu Tokyo Ginza — 12 monitors + 10 sensors
+  { id: 'alloc-7', projectId: 'prj-4', productId: 'prod-1', quantity: 12, status: 'Draft', targetDate: futureDate(75) },
+  { id: 'alloc-8', projectId: 'prj-4', productId: 'prod-2', quantity: 10, status: 'Draft', targetDate: futureDate(75) },
+  // Prada Milano — 6 monitors + 4 sensors
+  { id: 'alloc-9', projectId: 'prj-5', productId: 'prod-1', quantity: 6, status: 'Draft', targetDate: futureDate(105) },
+  { id: 'alloc-10', projectId: 'prj-5', productId: 'prod-2', quantity: 4, status: 'Draft', targetDate: futureDate(105) },
+  // Miu Miu NY SoHo — 10 monitors + 8 sensors
+  { id: 'alloc-11', projectId: 'prj-6', productId: 'prod-1', quantity: 10, status: 'Draft', targetDate: futureDate(135) },
+  { id: 'alloc-12', projectId: 'prj-6', productId: 'prod-2', quantity: 8, status: 'Draft', targetDate: futureDate(135) },
+  // Prada Singapore — Shipped (for backlog)
+  { id: 'alloc-13', projectId: 'prj-7', productId: 'prod-1', quantity: 4, status: 'Shipped', targetDate: futureDate(30) },
+  { id: 'alloc-14', projectId: 'prj-7', productId: 'prod-2', quantity: 3, status: 'Shipped', targetDate: futureDate(30) },
+  // Miu Miu London — Shipped (for backlog)
+  { id: 'alloc-15', projectId: 'prj-8', productId: 'prod-1', quantity: 5, status: 'Shipped', targetDate: futureDate(20) },
+  { id: 'alloc-16', projectId: 'prj-8', productId: 'prod-2', quantity: 4, status: 'Shipped', targetDate: futureDate(20) },
+];
+
+export const mockSupplierOrders: SupplierOrder[] = [
   {
-    id: '4',
-    orderNumber: 'OUT-2024-001',
-    type: 'outbound',
-    status: 'processing',
-    customer: 'Tech Solutions SRL',
-    items: [
-      { id: '5', productId: '1', productName: 'Laptop Dell XPS 15', sku: 'DELL-XPS15-001', quantity: 5, unitPrice: 1299.99 },
-      { id: '6', productId: '4', productName: 'Monitor 27" 4K', sku: 'MON-4K27-004', quantity: 5, unitPrice: 449.99 },
-    ],
-    totalQuantity: 10,
-    createdAt: new Date('2024-01-16'),
-    expectedDate: new Date('2024-01-18'),
+    id: 'so-1',
+    supplierName: 'LG Display B2B',
+    productId: 'prod-1',
+    quantityRequested: 10,
+    expectedDeliveryDate: futureDate(30),
+    status: 'In_Transit',
   },
   {
-    id: '5',
-    orderNumber: 'OUT-2024-002',
-    type: 'outbound',
-    status: 'pending',
-    customer: 'Digital Office SpA',
-    items: [
-      { id: '7', productId: '2', productName: 'Mouse Logitech MX Master', sku: 'LOG-MXM-002', quantity: 25, unitPrice: 89.99 },
-      { id: '8', productId: '7', productName: 'Docking Station USB-C', sku: 'DOCK-USBC-007', quantity: 10, unitPrice: 179.99 },
-    ],
-    totalQuantity: 35,
-    createdAt: new Date('2024-01-16'),
-    expectedDate: new Date('2024-01-19'),
-  },
-  {
-    id: '6',
-    orderNumber: 'OUT-2024-003',
-    type: 'outbound',
-    status: 'completed',
-    customer: 'Smart Work Consulting',
-    items: [
-      { id: '9', productId: '6', productName: 'Cuffie Wireless', sku: 'AUD-WL-006', quantity: 15, unitPrice: 199.99 },
-    ],
-    totalQuantity: 15,
-    createdAt: new Date('2024-01-12'),
-    expectedDate: new Date('2024-01-14'),
+    id: 'so-2',
+    supplierName: 'Sensirion AG',
+    productId: 'prod-2',
+    quantityRequested: 15,
+    expectedDeliveryDate: futureDate(20),
+    status: 'Sent',
   },
 ];
