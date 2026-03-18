@@ -104,6 +104,9 @@ export default function Projects() {
             <TabsTrigger value="forecast" className="gap-2">
               <BarChart3 className="h-4 w-4" /> Analisi Fabbisogno
             </TabsTrigger>
+            <TabsTrigger value="import" className="gap-2">
+              <FileUp className="h-4 w-4" /> Import CSV
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="projects" className="space-y-6">
