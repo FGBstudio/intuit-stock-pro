@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Pencil, BarChart3 } from "lucide-react";
+import { Search, Plus, Pencil, BarChart3, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
