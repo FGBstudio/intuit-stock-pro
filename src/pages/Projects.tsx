@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Pencil, BarChart3 } from "lucide-react";
+import { Search, Plus, Pencil, BarChart3, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProcurementForecasting } from "@/components/dashboard/ProcurementForecasting";
+import { DataImporter } from "@/components/admin/DataImporter";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Project = Tables<"projects">;
@@ -103,6 +104,9 @@ export default function Projects() {
             <TabsTrigger value="forecast" className="gap-2">
               <BarChart3 className="h-4 w-4" /> Analisi Fabbisogno
             </TabsTrigger>
+            <TabsTrigger value="import" className="gap-2">
+              <FileUp className="h-4 w-4" /> Import CSV
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="projects" className="space-y-6">
@@ -111,6 +115,10 @@ export default function Projects() {
 
           <TabsContent value="forecast">
             <ProcurementForecasting />
+          </TabsContent>
+
+          <TabsContent value="import">
+            <DataImporter />
           </TabsContent>
         </Tabs>
       ) : (
