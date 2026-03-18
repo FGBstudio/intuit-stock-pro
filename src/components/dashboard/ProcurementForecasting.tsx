@@ -79,10 +79,14 @@ export function ProcurementForecasting() {
     // Filter allocations to matching projects
     const filteredAllocations = allocations.filter((a) => projectIds.has(a.project_id));
 
-    // Aggregate per product
+    // Aggregate per product with project breakdown
     const demandMap = new Map<string, number>();
+    const breakdownMap = new Map<string, Map<string, number>>();
     for (const a of filteredAllocations) {
       demandMap.set(a.product_id, (demandMap.get(a.product_id) || 0) + a.quantity);
+      if (!breakdownMap.has(a.product_id)) breakdownMap.set(a.product_id, new Map());
+      const pMap = breakdownMap.get(a.product_id)!;
+      pMap.set(a.project_id, (pMap.get(a.project_id) || 0) + a.quantity);
     }
 
     // Build forecast items (only products with demand > 0)
@@ -93,7 +97,26 @@ export function ProcurementForecasting() {
       const currentStock = product.quantity_in_stock;
       const coveredByStock = Math.min(totalDemand, currentStock);
       const shortfallToOrder = Math.max(0, totalDemand - currentStock);
-      items.push({ product, totalDemand, currentStock, coveredByStock, shortfallToOrder });
+
+      const projectBreakdown: ProjectDemand[] = [];
+      const pMap = breakdownMap.get(product.id);
+      if (pMap) {
+        for (const [projId, qty] of pMap) {
+          const proj = filteredProjects.find((p) => p.id === projId);
+          if (proj) {
+            projectBreakdown.push({
+              projectId: projId,
+              projectName: proj.name,
+              client: proj.client,
+              region: proj.region,
+              quantity: qty,
+            });
+          }
+        }
+      }
+      projectBreakdown.sort((a, b) => b.quantity - a.quantity);
+
+      items.push({ product, totalDemand, currentStock, coveredByStock, shortfallToOrder, projectBreakdown });
     }
 
     // Sort: shortfall descending
