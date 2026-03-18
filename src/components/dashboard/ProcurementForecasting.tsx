@@ -235,6 +235,29 @@ export function ProcurementForecasting() {
                         <span className="text-xs text-muted-foreground font-mono">{item.product.sku}</span>
                         <Badge variant="outline" className="text-xs">{item.product.certification}</Badge>
                       </div>
+                      {/* Collapsible project list */}
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center gap-1 mt-2 text-xs text-primary hover:text-primary/80 transition-colors">
+                            <ChevronDown className="h-3 w-3" />
+                            {item.projectBreakdown.length} cantier{item.projectBreakdown.length === 1 ? "e" : "i"} associat{item.projectBreakdown.length === 1 ? "o" : "i"}
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-2 space-y-1.5">
+                            {item.projectBreakdown.map((pb) => (
+                              <div key={pb.projectId} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/50">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-foreground">{pb.projectName}</span>
+                                  <span className="text-muted-foreground">{pb.client}</span>
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">{pb.region}</Badge>
+                                </div>
+                                <span className="font-semibold text-foreground">×{pb.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                     {hasShortfall && <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />}
                   </div>
