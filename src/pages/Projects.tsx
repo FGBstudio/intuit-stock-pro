@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProcurementForecasting } from "@/components/dashboard/ProcurementForecasting";
+import { DataImporter } from "@/components/admin/DataImporter";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Project = Tables<"projects">;
