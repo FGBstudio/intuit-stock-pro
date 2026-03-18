@@ -13,12 +13,21 @@ type Product = Tables<"products">;
 type Project = Tables<"projects">;
 type Allocation = Tables<"project_allocations">;
 
+interface ProjectDemand {
+  projectId: string;
+  projectName: string;
+  client: string;
+  region: string;
+  quantity: number;
+}
+
 interface ForecastItem {
   product: Product;
   totalDemand: number;
   currentStock: number;
   coveredByStock: number;
   shortfallToOrder: number;
+  projectBreakdown: ProjectDemand[];
 }
 
 export function ProcurementForecasting() {
