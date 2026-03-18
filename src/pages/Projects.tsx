@@ -89,6 +89,11 @@ export default function Projects() {
     return matchesSearch && matchesRegion && matchesPm;
   });
 
+  const filtersAndTable = renderFiltersAndTableContent(
+    search, setSearch, regionFilter, setRegionFilter, pmFilter, setPmFilter,
+    pmList, isAdmin, openNew, loading, filtered, openEdit,
+  );
+
   return (
     <MainLayout title={isAdmin ? "Tutti i Cantieri" : "I Miei Cantieri"} subtitle="Gestione progetti e allocazioni hardware">
       {isAdmin ? (
@@ -101,7 +106,7 @@ export default function Projects() {
           </TabsList>
 
           <TabsContent value="projects" className="space-y-6">
-            {renderFiltersAndTable()}
+            {filtersAndTable}
           </TabsContent>
 
           <TabsContent value="forecast">
@@ -110,7 +115,7 @@ export default function Projects() {
         </Tabs>
       ) : (
         <div className="space-y-6">
-          {renderFiltersAndTable()}
+          {filtersAndTable}
         </div>
       )}
 
