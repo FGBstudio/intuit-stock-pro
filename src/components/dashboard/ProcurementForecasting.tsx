@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, CheckCircle, Package, ShoppingCart } from "lucide-react";
+import { AlertTriangle, CheckCircle, ChevronDown, Package, ShoppingCart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -12,12 +13,21 @@ type Product = Tables<"products">;
 type Project = Tables<"projects">;
 type Allocation = Tables<"project_allocations">;
 
+interface ProjectDemand {
+  projectId: string;
+  projectName: string;
+  client: string;
+  region: string;
+  quantity: number;
+}
+
 interface ForecastItem {
   product: Product;
   totalDemand: number;
   currentStock: number;
   coveredByStock: number;
   shortfallToOrder: number;
+  projectBreakdown: ProjectDemand[];
 }
 
 export function ProcurementForecasting() {
@@ -69,10 +79,14 @@ export function ProcurementForecasting() {
     // Filter allocations to matching projects
     const filteredAllocations = allocations.filter((a) => projectIds.has(a.project_id));
 
-    // Aggregate per product
+    // Aggregate per product with project breakdown
     const demandMap = new Map<string, number>();
+    const breakdownMap = new Map<string, Map<string, number>>();
     for (const a of filteredAllocations) {
       demandMap.set(a.product_id, (demandMap.get(a.product_id) || 0) + a.quantity);
+      if (!breakdownMap.has(a.product_id)) breakdownMap.set(a.product_id, new Map());
+      const pMap = breakdownMap.get(a.product_id)!;
+      pMap.set(a.project_id, (pMap.get(a.project_id) || 0) + a.quantity);
     }
 
     // Build forecast items (only products with demand > 0)
@@ -83,7 +97,26 @@ export function ProcurementForecasting() {
       const currentStock = product.quantity_in_stock;
       const coveredByStock = Math.min(totalDemand, currentStock);
       const shortfallToOrder = Math.max(0, totalDemand - currentStock);
-      items.push({ product, totalDemand, currentStock, coveredByStock, shortfallToOrder });
+
+      const projectBreakdown: ProjectDemand[] = [];
+      const pMap = breakdownMap.get(product.id);
+      if (pMap) {
+        for (const [projId, qty] of pMap) {
+          const proj = filteredProjects.find((p) => p.id === projId);
+          if (proj) {
+            projectBreakdown.push({
+              projectId: projId,
+              projectName: proj.name,
+              client: proj.client,
+              region: proj.region,
+              quantity: qty,
+            });
+          }
+        }
+      }
+      projectBreakdown.sort((a, b) => b.quantity - a.quantity);
+
+      items.push({ product, totalDemand, currentStock, coveredByStock, shortfallToOrder, projectBreakdown });
     }
 
     // Sort: shortfall descending
@@ -202,6 +235,29 @@ export function ProcurementForecasting() {
                         <span className="text-xs text-muted-foreground font-mono">{item.product.sku}</span>
                         <Badge variant="outline" className="text-xs">{item.product.certification}</Badge>
                       </div>
+                      {/* Collapsible project list */}
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center gap-1 mt-2 text-xs text-primary hover:text-primary/80 transition-colors">
+                            <ChevronDown className="h-3 w-3" />
+                            {item.projectBreakdown.length} cantier{item.projectBreakdown.length === 1 ? "e" : "i"} associat{item.projectBreakdown.length === 1 ? "o" : "i"}
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-2 space-y-1.5">
+                            {item.projectBreakdown.map((pb) => (
+                              <div key={pb.projectId} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/50">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-foreground">{pb.projectName}</span>
+                                  <span className="text-muted-foreground">{pb.client}</span>
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">{pb.region}</Badge>
+                                </div>
+                                <span className="font-semibold text-foreground">×{pb.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                     {hasShortfall && <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />}
                   </div>
