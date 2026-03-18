@@ -116,6 +116,10 @@ export default function Projects() {
           <TabsContent value="forecast">
             <ProcurementForecasting />
           </TabsContent>
+
+          <TabsContent value="import">
+            <DataImporter />
+          </TabsContent>
         </Tabs>
       ) : (
         <div className="space-y-6">
