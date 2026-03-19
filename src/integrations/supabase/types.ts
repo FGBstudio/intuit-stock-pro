@@ -285,7 +285,7 @@ export type Database = {
         | "Shipped"
         | "Installed_Online"
       app_role: "ADMIN" | "PM"
-      certification_type: "LEED" | "WELL" | "CO2" | "CO2-CO"
+      certification_type: "LEED" | "WELL" | "CO2" | "CO2-CO" | "Energy"
       project_status: "Design" | "Construction" | "Completed" | "Cancelled"
       region: "Europe" | "America" | "APAC" | "ME"
       supplier_order_status: "Draft" | "Sent" | "In_Transit" | "Received"
@@ -424,7 +424,7 @@ export const Constants = {
         "Installed_Online",
       ],
       app_role: ["ADMIN", "PM"],
-      certification_type: ["LEED", "WELL", "CO2", "CO2-CO"],
+      certification_type: ["LEED", "WELL", "CO2", "CO2-CO", "Energy"],
       project_status: ["Design", "Construction", "Completed", "Cancelled"],
       region: ["Europe", "America", "APAC", "ME"],
       supplier_order_status: ["Draft", "Sent", "In_Transit", "Received"],
