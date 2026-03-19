@@ -8,22 +8,11 @@ const futureDate = (daysFromNow: number) => {
 };
 
 export const mockProducts: Product[] = [
-  {
-    id: 'prod-1',
-    sku: 'MON-LEED-V2',
-    name: 'Monitor LEED v2',
-    certification: 'LEED',
-    quantityInStock: 18,
-    supplierLeadTimeDays: 45,
-  },
-  {
-    id: 'prod-2',
-    sku: 'SENS-CO2-PRO',
-    name: 'Sensore CO2 Pro',
-    certification: 'CO2',
-    quantityInStock: 35,
-    supplierLeadTimeDays: 30,
-  },
+  { id: 'prod-1', sku: 'IAQ-WELL-01', name: 'IAQ WELL', certification: 'WELL', quantityInStock: 0, supplierLeadTimeDays: 30 },
+  { id: 'prod-2', sku: 'IAQ-LEED-01', name: 'IAQ LEED', certification: 'LEED', quantityInStock: 0, supplierLeadTimeDays: 30 },
+  { id: 'prod-3', sku: 'IAQ-CO2-01', name: 'IAQ CO2', certification: 'CO2', quantityInStock: 0, supplierLeadTimeDays: 30 },
+  { id: 'prod-4', sku: 'IAQ-COCO2-01', name: 'IAQ CO-CO2', certification: 'CO2-CO', quantityInStock: 0, supplierLeadTimeDays: 30 },
+  { id: 'prod-5', sku: 'ENERGY-SYS-01', name: 'Energy System', certification: 'LEED', quantityInStock: 0, supplierLeadTimeDays: 45 },
 ];
 
 export const mockProjects: Project[] = [
