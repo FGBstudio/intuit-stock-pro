@@ -1,7 +1,7 @@
 export type Region = 'Europe' | 'America' | 'APAC' | 'ME';
-export type CertificationType = 'LEED' | 'WELL' | 'CO2' | 'CO2-CO';
+export type CertificationType = 'LEED' | 'WELL' | 'CO2' | 'CO2-CO' | 'Energy';
 export type ProjectStatus = 'Design' | 'Construction' | 'Completed' | 'Cancelled';
-export type AllocationStatus = 'Draft' | 'Allocated' | 'Shipped' | 'Installed_Online';
+export type AllocationStatus = 'Draft' | 'Allocated' | 'Requested' | 'Shipped' | 'Installed_Online';
 
 export interface Product {
   id: string;
