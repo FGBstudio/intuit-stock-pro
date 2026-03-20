@@ -23,16 +23,18 @@ export default function SupplierOrders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       const [ordRes, prodRes] = await Promise.all([
         supabase.from("supplier_orders").select("*").order("expected_delivery_date"),
         supabase.from("products").select("*"),
       ]);
+      if (ordRes.error) console.error("Supabase fetch error:", ordRes.error);
+      if (prodRes.error) console.error("Supabase fetch error:", prodRes.error);
       setOrders(ordRes.data || []);
       setProducts(prodRes.data || []);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, []);
 
   return (
