@@ -11,12 +11,15 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from("products").select("*").order("name");
+    const fetchProducts = async () => {
+      const { data, error } = await supabase.from("products").select("*").order("name");
+      if (error) {
+        console.error("Supabase fetch error:", error);
+      }
       setProducts(data || []);
       setLoading(false);
     };
-    fetch();
+    fetchProducts();
   }, []);
 
   return (
