@@ -1,14 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { componentTagger } from "lovable-tagger";
 
-export default defineConfig({
-  // SOSTITUISCI 'nome-del-tuo-repo' CON IL NOME ESATTO DEL TUO REPOSITORY GITHUB
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
+  // AGGIUNGI QUESTA RIGA: Deve essere il nome esatto del tuo repository racchiuso tra slash
   base: "/intuit-stock-pro/", 
-  plugins: [react()],
+  
+  server: {
+    host: "::",
+    port: 8080,
+    hmr: {
+      overlay: false,
+    },
+  },
+  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
