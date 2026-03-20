@@ -51,7 +51,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      {/* AGGIUNGI IL BASENAME QUI SOTTO */}
+      <BrowserRouter basename="/intuit-stock-pro">
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
@@ -59,5 +60,7 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
+
+export default App;
 
 export default App;
