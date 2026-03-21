@@ -5,9 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // AGGIUNGI QUESTA RIGA: Deve essere il nome esatto del tuo repository racchiuso tra slash
-  base: "/intuit-stock-pro/", 
-  
   server: {
     host: "::",
     port: 8080,

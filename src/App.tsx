@@ -51,7 +51,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="/intuit-stock-pro">
+      <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
