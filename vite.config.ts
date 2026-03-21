@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Use /intuit-stock-pro/ base only for GitHub Pages production builds
+  base: process.env.GITHUB_PAGES === "true" ? "/intuit-stock-pro/" : "/",
   server: {
     host: "::",
     port: 8080,

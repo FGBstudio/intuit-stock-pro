@@ -16,6 +16,9 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Detect basename from <base> tag set by Vite's `base` config
+const basename = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
+
 function AppRoutes() {
   const { user, role, loading } = useAuth();
 
@@ -51,7 +54,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
