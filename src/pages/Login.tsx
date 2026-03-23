@@ -35,8 +35,8 @@ export default function Login() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <Package className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">RetailOps</h1>
-          <p className="text-sm text-muted-foreground">Supply Chain Platform — Accesso</p>
+          <h1 className="text-2xl font-bold text-foreground">FGB Inventory</h1>
+          <p className="text-sm text-muted-foreground">Supply Chain Platform — Access</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,13 +53,6 @@ export default function Login() {
             {isLoading ? "Accesso in corso..." : "Accedi"}
           </Button>
         </form>
-
-        <div className="rounded-lg border border-border/50 bg-card p-4 text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground">Account di test:</p>
-          <p><strong>Admin:</strong> admin@retailops.com / admin123</p>
-          <p><strong>PM 1:</strong> marco.rossi@retailops.com / pm123</p>
-          <p><strong>PM 2:</strong> laura.bianchi@retailops.com / pm123</p>
-        </div>
       </div>
     </div>
   );
