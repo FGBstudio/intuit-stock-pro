@@ -24,8 +24,11 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: "true"
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: https://zqkdgzuxnbjreidqxdqk.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpxa2RnenV4bmJqcmVpZHF4ZHFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NTYwMzAsImV4cCI6MjA4OTMzMjAzMH0.Ra_74BYPj6PDmBkwSNbRRoqPZCEoSJ6WQgHv2OxVMZ8
+
+      - name: Add SPA fallback for GitHub Pages
+        run: cp dist/index.html dist/404.html
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
