@@ -55,7 +55,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-semibold text-sidebar-foreground">RetailOps</span>
+              <span className="font-semibold text-sidebar-foreground">FGB Inventory</span>
               <span className="text-xs text-sidebar-foreground/60">Supply Chain Platform</span>
             </div>
           )}
@@ -127,7 +127,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="rounded-lg bg-sidebar-accent p-3">
-            <p className="text-xs text-sidebar-foreground/70">RetailOps v2.0</p>
+            <p className="text-xs text-sidebar-foreground/70">FGB Inventory v2.0</p>
           </div>
         )}
       </SidebarFooter>
