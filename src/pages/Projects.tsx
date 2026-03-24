@@ -216,6 +216,13 @@ function renderFiltersAndTableContent(
                     <td className="p-4 font-medium text-foreground">{project.name}</td>
                     <td className="p-4 text-foreground">{project.client}</td>
                     <td className="p-4"><Badge variant="outline">{project.region}</Badge></td>
+                    <td className="p-4">
+                      {project.project_type ? (
+                        <Badge variant="secondary" className="text-xs">{project.project_type}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     {isAdmin && <td className="p-4 text-foreground">{project.pm_name}</td>}
                     <td className="p-4">
                       <span className={cn("font-medium", daysLeft <= 30 ? "text-warning" : "text-foreground")}>
