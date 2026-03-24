@@ -200,6 +200,7 @@ function renderFiltersAndTableContent(
                 <th className="text-left p-4 font-medium text-muted-foreground">Progetto</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Cliente</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Region</th>
+                <th className="text-left p-4 font-medium text-muted-foreground">Tipo</th>
                 {isAdmin && <th className="text-left p-4 font-medium text-muted-foreground">PM</th>}
                 <th className="text-left p-4 font-medium text-muted-foreground">Handover</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Stato</th>
