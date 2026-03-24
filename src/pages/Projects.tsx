@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Pencil, BarChart3, FileUp } from "lucide-react";
+import { Search, Plus, Pencil, BarChart3, FileUp, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -28,6 +29,7 @@ const statusColors: Record<string, string> = {
 
 export default function Projects() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<(Project & { pm_name?: string; allocations_summary?: { name: string; certification: string; quantity: number }[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -92,7 +94,7 @@ export default function Projects() {
 
   const filtersAndTable = renderFiltersAndTableContent(
     search, setSearch, regionFilter, setRegionFilter, pmFilter, setPmFilter,
-    pmList, isAdmin, openNew, loading, filtered, openEdit,
+    pmList, isAdmin, openNew, loading, filtered, openEdit, navigate,
   );
 
   return (
@@ -145,6 +147,7 @@ function renderFiltersAndTableContent(
   pmList: { id: string; full_name: string }[],
   isAdmin: boolean, openNew: () => void,
   loading: boolean, filtered: any[], openEdit: (p: any) => void,
+  navigate: (path: string) => void,
 ) {
   return (
     <>
@@ -197,6 +200,7 @@ function renderFiltersAndTableContent(
                 <th className="text-left p-4 font-medium text-muted-foreground">Progetto</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Cliente</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Region</th>
+                <th className="text-left p-4 font-medium text-muted-foreground">Tipo</th>
                 {isAdmin && <th className="text-left p-4 font-medium text-muted-foreground">PM</th>}
                 <th className="text-left p-4 font-medium text-muted-foreground">Handover</th>
                 <th className="text-left p-4 font-medium text-muted-foreground">Stato</th>
@@ -212,6 +216,13 @@ function renderFiltersAndTableContent(
                     <td className="p-4 font-medium text-foreground">{project.name}</td>
                     <td className="p-4 text-foreground">{project.client}</td>
                     <td className="p-4"><Badge variant="outline">{project.region}</Badge></td>
+                    <td className="p-4">
+                      {project.project_type ? (
+                        <Badge variant="secondary" className="text-xs">{project.project_type}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
                     {isAdmin && <td className="p-4 text-foreground">{project.pm_name}</td>}
                     <td className="p-4">
                       <span className={cn("font-medium", daysLeft <= 30 ? "text-warning" : "text-foreground")}>
@@ -237,9 +248,12 @@ function renderFiltersAndTableContent(
                         </div>
                       )}
                     </td>
-                    <td className="p-4">
-                      <Button size="sm" variant="outline" onClick={() => openEdit(project)} className="gap-1">
-                        <Pencil className="h-3 w-3" /> Gestisci
+                    <td className="p-4 flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/projects/${project.id}`)} className="gap-1">
+                        <Eye className="h-3 w-3" /> Dettaglio
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(project)} className="gap-1">
+                        <Pencil className="h-3 w-3" /> Modifica
                       </Button>
                     </td>
                   </tr>

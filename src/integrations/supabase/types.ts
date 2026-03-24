@@ -52,6 +52,104 @@ export type Database = {
           },
         ]
       }
+      certification_milestones: {
+        Row: {
+          category: string
+          certification_id: string
+          created_at: string
+          evidence_url: string | null
+          id: string
+          max_score: number
+          notes: string | null
+          requirement: string
+          score: number
+          status: Database["public"]["Enums"]["milestone_status"]
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          certification_id: string
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          max_score?: number
+          notes?: string | null
+          requirement: string
+          score?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          certification_id?: string
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          max_score?: number
+          notes?: string | null
+          requirement?: string
+          score?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certification_milestones_certification_id_fkey"
+            columns: ["certification_id"]
+            isOneToOne: false
+            referencedRelation: "certifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certifications: {
+        Row: {
+          cert_type: Database["public"]["Enums"]["project_type"]
+          created_at: string
+          id: string
+          project_id: string | null
+          score: number
+          site_id: string | null
+          target_score: number
+          updated_at: string
+        }
+        Insert: {
+          cert_type: Database["public"]["Enums"]["project_type"]
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          score?: number
+          site_id?: string | null
+          target_score?: number
+          updated_at?: string
+        }
+        Update: {
+          cert_type?: Database["public"]["Enums"]["project_type"]
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          score?: number
+          site_id?: string | null
+          target_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certifications_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           certification: Database["public"]["Enums"]["certification_type"]
@@ -165,7 +263,9 @@ export type Database = {
           id: string
           name: string
           pm_id: string | null
+          project_type: Database["public"]["Enums"]["project_type"] | null
           region: Database["public"]["Enums"]["region"]
+          site_id: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
         }
@@ -176,7 +276,9 @@ export type Database = {
           id?: string
           name: string
           pm_id?: string | null
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           region: Database["public"]["Enums"]["region"]
+          site_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
         }
@@ -187,7 +289,9 @@ export type Database = {
           id?: string
           name?: string
           pm_id?: string | null
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           region?: Database["public"]["Enums"]["region"]
+          site_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
         }
@@ -199,7 +303,44 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "projects_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      sites: {
+        Row: {
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       supplier_orders: {
         Row: {
@@ -286,7 +427,9 @@ export type Database = {
         | "Installed_Online"
       app_role: "ADMIN" | "PM"
       certification_type: "LEED" | "WELL" | "CO2" | "CO2-CO" | "Energy"
+      milestone_status: "pending" | "in_progress" | "completed"
       project_status: "Design" | "Construction" | "Completed" | "Cancelled"
+      project_type: "LEED" | "WELL" | "Monitoring" | "Consulting"
       region: "Europe" | "America" | "APAC" | "ME"
       supplier_order_status: "Draft" | "Sent" | "In_Transit" | "Received"
     }
@@ -425,7 +568,9 @@ export const Constants = {
       ],
       app_role: ["ADMIN", "PM"],
       certification_type: ["LEED", "WELL", "CO2", "CO2-CO", "Energy"],
+      milestone_status: ["pending", "in_progress", "completed"],
       project_status: ["Design", "Construction", "Completed", "Cancelled"],
+      project_type: ["LEED", "WELL", "Monitoring", "Consulting"],
       region: ["Europe", "America", "APAC", "ME"],
       supplier_order_status: ["Draft", "Sent", "In_Transit", "Received"],
     },
