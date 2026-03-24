@@ -44,6 +44,7 @@ function AppRoutes() {
       
       {/* Shared route: both ADMIN and PM */}
       <Route path="/projects" element={<ProtectedRoute allowedRoles={["ADMIN", "PM"]}><Projects /></ProtectedRoute>} />
+      <Route path="/projects/:projectId" element={<ProtectedRoute allowedRoles={["ADMIN", "PM"]}><ProjectDetail /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

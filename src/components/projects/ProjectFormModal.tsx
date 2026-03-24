@@ -3,6 +3,8 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useSites } from "@/hooks/useProjectDetails";
+import { LEED_TEMPLATE } from "@/data/leedTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,8 @@ type Project = Tables<"projects">;
 type Product = Tables<"products">;
 type Allocation = Tables<"project_allocations">;
 
+const PROJECT_TYPES = ["LEED", "WELL", "Monitoring", "Consulting"] as const;
+
 interface AllocationLine {
   id?: string;
   product_id: string;
@@ -35,6 +39,8 @@ interface ProjectFormData {
   handover_date: Date;
   status: string;
   pm_id: string;
+  site_id: string;
+  project_type: string;
   allocations: AllocationLine[];
 }
 
@@ -52,16 +58,14 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
   const [products, setProducts] = useState<Product[]>([]);
   const [pmList, setPmList] = useState<{ id: string; full_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [newSiteName, setNewSiteName] = useState("");
+  const [showNewSite, setShowNewSite] = useState(false);
+  const { data: sites = [] } = useSites();
 
   const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<ProjectFormData>({
     defaultValues: {
-      name: "",
-      client: "",
-      region: "Europe",
-      handover_date: new Date(),
-      status: "Design",
-      pm_id: "",
-      allocations: [],
+      name: "", client: "", region: "Europe", handover_date: new Date(),
+      status: "Design", pm_id: "", site_id: "", project_type: "", allocations: [],
     },
   });
 
@@ -69,9 +73,7 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
 
   useEffect(() => {
     if (!open) return;
-    // Fetch products
     supabase.from("products").select("*").then(({ data }) => setProducts(data || []));
-    // Fetch PM list for admin
     if (isAdmin) {
       supabase.from("profiles").select("id, full_name").then(({ data }) => setPmList(data || []));
     }
@@ -81,28 +83,19 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
     if (!open) return;
     if (project) {
       reset({
-        name: project.name,
-        client: project.client,
-        region: project.region,
-        handover_date: new Date(project.handover_date),
-        status: project.status,
-        pm_id: project.pm_id || "",
+        name: project.name, client: project.client, region: project.region,
+        handover_date: new Date(project.handover_date), status: project.status,
+        pm_id: project.pm_id || "", site_id: (project as any).site_id || "",
+        project_type: (project as any).project_type || "",
         allocations: existingAllocations.map((a) => ({
-          id: a.id,
-          product_id: a.product_id,
-          quantity: a.quantity,
-          status: a.status,
+          id: a.id, product_id: a.product_id, quantity: a.quantity, status: a.status,
         })),
       });
     } else {
       reset({
-        name: "",
-        client: "",
-        region: "Europe",
-        handover_date: new Date(),
-        status: "Design",
-        pm_id: isAdmin ? "" : user?.id || "",
-        allocations: [],
+        name: "", client: "", region: "Europe", handover_date: new Date(),
+        status: "Design", pm_id: isAdmin ? "" : user?.id || "",
+        site_id: "", project_type: "", allocations: [],
       });
     }
   }, [open, project, existingAllocations, reset, isAdmin, user]);
@@ -113,43 +106,75 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
       const pmId = isAdmin ? data.pm_id : user?.id;
       const handoverStr = format(data.handover_date, "yyyy-MM-dd");
 
-      let projectId = project?.id;
-
-      if (project) {
-        // Update project
-        const { error } = await supabase
-          .from("projects")
-          .update({
-            name: data.name,
-            client: data.client,
-            region: data.region as any,
-            handover_date: handoverStr,
-            status: data.status as any,
-            pm_id: pmId || null,
-          })
-          .eq("id", project.id);
-        if (error) throw error;
-      } else {
-        // Insert project
-        const { data: newProject, error } = await supabase
-          .from("projects")
-          .insert({
-            name: data.name,
-            client: data.client,
-            region: data.region as any,
-            handover_date: handoverStr,
-            status: data.status as any,
-            pm_id: pmId || null,
-          })
+      // Create site if needed
+      let siteId = data.site_id || null;
+      if (showNewSite && newSiteName.trim()) {
+        const { data: newSite, error: siteErr } = await supabase
+          .from("sites")
+          .insert({ name: newSiteName.trim() })
           .select("id")
           .single();
+        if (siteErr) throw siteErr;
+        siteId = newSite.id;
+      }
+
+      let projectId = project?.id;
+
+      const projectPayload = {
+        name: data.name, client: data.client,
+        region: data.region as any, handover_date: handoverStr,
+        status: data.status as any, pm_id: pmId || null,
+        site_id: siteId,
+        project_type: data.project_type || null,
+      };
+
+      if (project) {
+        const { error } = await supabase.from("projects").update(projectPayload as any).eq("id", project.id);
+        if (error) throw error;
+      } else {
+        const { data: newProject, error } = await supabase
+          .from("projects").insert(projectPayload as any).select("id").single();
         if (error) throw error;
         projectId = newProject.id;
+
+        // TRIGGER: Auto-generate certification + milestones for LEED/WELL
+        if (data.project_type === "LEED" || data.project_type === "WELL") {
+          const { data: cert, error: certErr } = await supabase
+            .from("certifications")
+            .insert({
+              site_id: siteId,
+              project_id: projectId,
+              cert_type: data.project_type as any,
+              score: 0,
+              target_score: data.project_type === "LEED" ? 110 : 100,
+            })
+            .select("id")
+            .single();
+          if (certErr) throw certErr;
+
+          // Generate milestone rows from template
+          const template = data.project_type === "LEED" ? LEED_TEMPLATE : LEED_TEMPLATE; // TODO: WELL template
+          const milestoneRows = template.map((t) => ({
+            certification_id: cert.id,
+            category: t.category,
+            requirement: t.requirement,
+            score: 0,
+            max_score: t.max_score,
+            status: "pending" as const,
+          }));
+
+          // Insert in batches
+          for (let i = 0; i < milestoneRows.length; i += 50) {
+            const batch = milestoneRows.slice(i, i + 50);
+            const { error: mErr } = await supabase.from("certification_milestones").insert(batch as any);
+            if (mErr) throw mErr;
+          }
+        }
       }
 
       if (!projectId) throw new Error("Missing project ID");
 
-      // Handle allocations: delete removed, upsert existing/new
+      // Handle allocations
       const existingIds = existingAllocations.map((a) => a.id);
       const currentIds = data.allocations.filter((a) => a.id).map((a) => a.id!);
       const toDelete = existingIds.filter((id) => !currentIds.includes(id));
@@ -163,23 +188,14 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
           new Date(data.handover_date.getTime() - 15 * 24 * 60 * 60 * 1000),
           "yyyy-MM-dd"
         );
-
         if (alloc.id) {
-          await supabase
-            .from("project_allocations")
-            .update({
-              product_id: alloc.product_id,
-              quantity: alloc.quantity,
-              status: alloc.status as any,
-            })
+          await supabase.from("project_allocations")
+            .update({ product_id: alloc.product_id, quantity: alloc.quantity, status: alloc.status as any })
             .eq("id", alloc.id);
         } else {
           await supabase.from("project_allocations").insert({
-            project_id: projectId,
-            product_id: alloc.product_id,
-            quantity: alloc.quantity,
-            status: (alloc.status || "Draft") as any,
-            target_date: targetDate,
+            project_id: projectId, product_id: alloc.product_id,
+            quantity: alloc.quantity, status: (alloc.status || "Draft") as any, target_date: targetDate,
           });
         }
       }
@@ -206,6 +222,44 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground border-b pb-2">Dati Cantiere</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Site selection */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Sito</Label>
+                {showNewSite ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nome nuovo sito..."
+                      value={newSiteName}
+                      onChange={(e) => setNewSiteName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowNewSite(false)}>
+                      Annulla
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Controller
+                      control={control}
+                      name="site_id"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="flex-1"><SelectValue placeholder="Seleziona sito" /></SelectTrigger>
+                          <SelectContent>
+                            {sites.map((s: any) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}{s.city ? ` — ${s.city}` : ""}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowNewSite(true)} className="gap-1 shrink-0">
+                      <Plus className="h-3 w-3" /> Nuovo
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label>Nome Progetto *</Label>
                 <Input {...register("name", { required: true })} placeholder="es. Prada Milano" />
@@ -216,161 +270,143 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
                 <Input {...register("client", { required: true })} placeholder="es. Prada" />
                 {errors.client && <p className="text-xs text-destructive">Campo obbligatorio</p>}
               </div>
+
+              {/* Project Type */}
               <div className="space-y-2">
-                <Label>Region</Label>
+                <Label>Tipo Progetto</Label>
                 <Controller
                   control={control}
-                  name="region"
+                  name="project_type"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Seleziona tipo" /></SelectTrigger>
                       <SelectContent>
-                        {Constants.public.Enums.region.map((r) => (
-                          <SelectItem key={r} value={r}>{r}</SelectItem>
+                        {PROJECT_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Region</Label>
+                <Controller control={control} name="region" render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Constants.public.Enums.region.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
               </div>
               <div className="space-y-2">
                 <Label>Handover Date *</Label>
-                <Controller
-                  control={control}
-                  name="handover_date"
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="p-3 pointer-events-auto" />
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                />
+                <Controller control={control} name="handover_date" rules={{ required: true }} render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? format(field.value, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                )} />
               </div>
               <div className="space-y-2">
                 <Label>Stato</Label>
-                <Controller
-                  control={control}
-                  name="status"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Constants.public.Enums.project_status.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Controller control={control} name="status" render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Constants.public.Enums.project_status.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
               </div>
               {isAdmin && (
                 <div className="space-y-2">
                   <Label>Assegna PM</Label>
-                  <Controller
-                    control={control}
-                    name="pm_id"
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger><SelectValue placeholder="Seleziona PM" /></SelectTrigger>
-                        <SelectContent>
-                          {pmList.map((pm) => (
-                            <SelectItem key={pm.id} value={pm.id}>{pm.full_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <Controller control={control} name="pm_id" render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder="Seleziona PM" /></SelectTrigger>
+                      <SelectContent>
+                        {pmList.map((pm) => (
+                          <SelectItem key={pm.id} value={pm.id}>{pm.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )} />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Section 2: Allocations (Line Items) */}
+          {/* Section 2: Allocations */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-foreground">Articoli (Allocazioni Hardware)</h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ product_id: "", quantity: 1, status: "Draft" })}
-                className="gap-1"
-              >
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ product_id: "", quantity: 1, status: "Draft" })} className="gap-1">
                 <Plus className="h-4 w-4" /> Aggiungi Articolo
               </Button>
             </div>
 
             {fields.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Nessun articolo aggiunto. Clicca "Aggiungi Articolo" per iniziare.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">Nessun articolo aggiunto.</p>
             ) : (
               <div className="space-y-3">
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-end gap-3 rounded-lg border p-3">
                     <div className="flex-1 space-y-1">
                       <Label className="text-xs text-muted-foreground">Prodotto</Label>
-                      <Controller
-                        control={control}
-                        name={`allocations.${index}.product_id`}
-                        rules={{ required: true }}
-                        render={({ field: f }) => (
-                          <Select value={f.value} onValueChange={f.onChange}>
-                            <SelectTrigger><SelectValue placeholder="Seleziona prodotto" /></SelectTrigger>
-                            <SelectContent>
-                             {Object.entries(
-                               products.reduce((acc, p) => {
-                                 const cert = p.certification;
-                                 if (!acc[cert]) acc[cert] = [];
-                                 acc[cert].push(p);
-                                 return acc;
-                               }, {} as Record<string, Product[]>)
-                             ).map(([cert, prods]) => (
-                               <div key={cert}>
-                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{cert}</div>
-                                 {prods.map((p) => (
-                                   <SelectItem key={p.id} value={p.id}>
-                                     {p.name} ({p.sku}) — Stock: {p.quantity_in_stock}
-                                   </SelectItem>
-                                 ))}
-                               </div>
-                             ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
+                      <Controller control={control} name={`allocations.${index}.product_id`} rules={{ required: true }} render={({ field: f }) => (
+                        <Select value={f.value} onValueChange={f.onChange}>
+                          <SelectTrigger><SelectValue placeholder="Seleziona prodotto" /></SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(
+                              products.reduce((acc, p) => {
+                                const cert = p.certification;
+                                if (!acc[cert]) acc[cert] = [];
+                                acc[cert].push(p);
+                                return acc;
+                              }, {} as Record<string, Product[]>)
+                            ).map(([cert, prods]) => (
+                              <div key={cert}>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{cert}</div>
+                                {prods.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>{p.name} ({p.sku}) — Stock: {p.quantity_in_stock}</SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )} />
                     </div>
                     <div className="w-24 space-y-1">
                       <Label className="text-xs text-muted-foreground">Qtà</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        {...register(`allocations.${index}.quantity`, { required: true, valueAsNumber: true, min: 1 })}
-                      />
+                      <Input type="number" min="1" {...register(`allocations.${index}.quantity`, { required: true, valueAsNumber: true, min: 1 })} />
                     </div>
                     {isAdmin && (
                       <div className="w-36 space-y-1">
                         <Label className="text-xs text-muted-foreground">Stato</Label>
-                        <Controller
-                          control={control}
-                          name={`allocations.${index}.status`}
-                          render={({ field: f }) => (
-                            <Select value={f.value} onValueChange={f.onChange}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {Constants.public.Enums.allocation_status.map((s) => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
+                        <Controller control={control} name={`allocations.${index}.status`} render={({ field: f }) => (
+                          <Select value={f.value} onValueChange={f.onChange}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {Constants.public.Enums.allocation_status.map((s) => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )} />
                       </div>
                     )}
                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive hover:text-destructive">
