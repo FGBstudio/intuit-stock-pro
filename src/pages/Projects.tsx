@@ -248,9 +248,12 @@ function renderFiltersAndTableContent(
                         </div>
                       )}
                     </td>
-                    <td className="p-4">
-                      <Button size="sm" variant="outline" onClick={() => openEdit(project)} className="gap-1">
-                        <Pencil className="h-3 w-3" /> Gestisci
+                    <td className="p-4 flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/projects/${project.id}`)} className="gap-1">
+                        <Eye className="h-3 w-3" /> Dettaglio
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(project)} className="gap-1">
+                        <Pencil className="h-3 w-3" /> Modifica
                       </Button>
                     </td>
                   </tr>
