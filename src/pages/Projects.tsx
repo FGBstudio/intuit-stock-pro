@@ -29,6 +29,7 @@ const statusColors: Record<string, string> = {
 
 export default function Projects() {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<(Project & { pm_name?: string; allocations_summary?: { name: string; certification: string; quantity: number }[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
