@@ -3,7 +3,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useSites } from "@/hooks/useProjectDetails";
+import { useHoldings, useBrands, useSites } from "@/hooks/useProjectDetails";
 import { LEED_TEMPLATE } from "@/data/leedTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -58,9 +58,17 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
   const [products, setProducts] = useState<Product[]>([]);
   const [pmList, setPmList] = useState<{ id: string; full_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
-  const [newSiteName, setNewSiteName] = useState("");
+
+  // Cascading state
+  const [selectedHoldingId, setSelectedHoldingId] = useState<string>("");
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
   const [showNewSite, setShowNewSite] = useState(false);
-  const { data: sites = [] } = useSites();
+  const [newSiteName, setNewSiteName] = useState("");
+
+  // Cascading queries
+  const { data: holdings = [], isLoading: loadingHoldings } = useHoldings();
+  const { data: brands = [], isLoading: loadingBrands } = useBrands(selectedHoldingId || undefined);
+  const { data: sites = [], isLoading: loadingSites } = useSites(selectedBrandId || undefined);
 
   const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<ProjectFormData>({
     defaultValues: {
@@ -85,20 +93,42 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
       reset({
         name: project.name, client: project.client, region: project.region,
         handover_date: new Date(project.handover_date), status: project.status,
-        pm_id: project.pm_id || "", site_id: (project as any).site_id || "",
-        project_type: (project as any).project_type || "",
+        pm_id: project.pm_id || "", site_id: project.site_id || "",
+        project_type: project.project_type || "",
         allocations: existingAllocations.map((a) => ({
           id: a.id, product_id: a.product_id, quantity: a.quantity, status: a.status,
         })),
       });
+      // TODO: could reverse-lookup holding/brand from site for edit mode
     } else {
       reset({
         name: "", client: "", region: "Europe", handover_date: new Date(),
         status: "Design", pm_id: isAdmin ? "" : user?.id || "",
         site_id: "", project_type: "", allocations: [],
       });
+      setSelectedHoldingId("");
+      setSelectedBrandId("");
+      setShowNewSite(false);
+      setNewSiteName("");
     }
   }, [open, project, existingAllocations, reset, isAdmin, user]);
+
+  // Reset brand when holding changes
+  const handleHoldingChange = (val: string) => {
+    setSelectedHoldingId(val);
+    setSelectedBrandId("");
+    setValue("site_id", "");
+    setShowNewSite(false);
+    setNewSiteName("");
+  };
+
+  // Reset site when brand changes
+  const handleBrandChange = (val: string) => {
+    setSelectedBrandId(val);
+    setValue("site_id", "");
+    setShowNewSite(false);
+    setNewSiteName("");
+  };
 
   const onSubmit = async (data: ProjectFormData) => {
     setSaving(true);
@@ -109,9 +139,12 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
       // Create site if needed
       let siteId = data.site_id || null;
       if (showNewSite && newSiteName.trim()) {
+        if (!selectedBrandId) {
+          throw new Error("Seleziona un Brand prima di creare un nuovo Sito.");
+        }
         const { data: newSite, error: siteErr } = await supabase
           .from("sites")
-          .insert({ name: newSiteName.trim() })
+          .insert({ name: newSiteName.trim(), brand_id: selectedBrandId } as any)
           .select("id")
           .single();
         if (siteErr) throw siteErr;
@@ -152,7 +185,6 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
             .single();
           if (certErr) throw certErr;
 
-          // Generate milestone rows from template
           const template = data.project_type === "LEED" ? LEED_TEMPLATE : LEED_TEMPLATE; // TODO: WELL template
           const milestoneRows = template.map((t) => ({
             certification_id: cert.id,
@@ -163,7 +195,6 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
             status: "pending" as const,
           }));
 
-          // Insert in batches
           for (let i = 0; i < milestoneRows.length; i += 50) {
             const batch = milestoneRows.slice(i, i + 50);
             const { error: mErr } = await supabase.from("certification_milestones").insert(batch as any);
@@ -218,13 +249,55 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Section 1: Project Data */}
+          {/* Section A: Localizzazione (Gerarchia) */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground border-b pb-2">Dati Cantiere</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Site selection */}
-              <div className="space-y-2 sm:col-span-2">
-                <Label>Sito</Label>
+            <h3 className="font-semibold text-foreground border-b pb-2">Localizzazione</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Holding */}
+              <div className="space-y-2">
+                <Label>Holding *</Label>
+                <Select value={selectedHoldingId} onValueChange={handleHoldingChange}>
+                  <SelectTrigger>
+                    {loadingHoldings ? (
+                      <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Caricamento...</span>
+                    ) : (
+                      <SelectValue placeholder="Seleziona holding" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {holdings.map((h: any) => (
+                      <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Brand */}
+              <div className="space-y-2">
+                <Label>Brand *</Label>
+                <Select
+                  value={selectedBrandId}
+                  onValueChange={handleBrandChange}
+                  disabled={!selectedHoldingId}
+                >
+                  <SelectTrigger>
+                    {loadingBrands && selectedHoldingId ? (
+                      <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Caricamento...</span>
+                    ) : (
+                      <SelectValue placeholder={selectedHoldingId ? "Seleziona brand" : "Prima seleziona holding"} />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((b: any) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Site */}
+              <div className="space-y-2">
+                <Label>Sito *</Label>
                 {showNewSite ? (
                   <div className="flex gap-2">
                     <Input
@@ -239,27 +312,44 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
                   </div>
                 ) : (
                   <div className="flex gap-2">
-                    <Controller
-                      control={control}
-                      name="site_id"
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger className="flex-1"><SelectValue placeholder="Seleziona sito" /></SelectTrigger>
-                          <SelectContent>
-                            {sites.map((s: any) => (
-                              <SelectItem key={s.id} value={s.id}>{s.name}{s.city ? ` — ${s.city}` : ""}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowNewSite(true)} className="gap-1 shrink-0">
+                    <Select
+                      value={watch("site_id")}
+                      onValueChange={(val) => setValue("site_id", val)}
+                      disabled={!selectedBrandId}
+                    >
+                      <SelectTrigger className="flex-1">
+                        {loadingSites && selectedBrandId ? (
+                          <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Caricamento...</span>
+                        ) : (
+                          <SelectValue placeholder={selectedBrandId ? "Seleziona sito" : "Prima seleziona brand"} />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sites.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}{s.city ? ` — ${s.city}` : ""}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowNewSite(true)}
+                      disabled={!selectedBrandId}
+                      className="gap-1 shrink-0"
+                    >
                       <Plus className="h-3 w-3" /> Nuovo
                     </Button>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
 
+          {/* Section B: Dettagli Progetto */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-foreground border-b pb-2">Dettagli Progetto</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nome Progetto *</Label>
                 <Input {...register("name", { required: true })} placeholder="es. Prada Milano" />
@@ -350,7 +440,7 @@ export function ProjectFormModal({ open, onOpenChange, project, existingAllocati
             </div>
           </div>
 
-          {/* Section 2: Allocations */}
+          {/* Section 3: Allocations */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-foreground">Articoli (Allocazioni Hardware)</h3>
