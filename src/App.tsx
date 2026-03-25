@@ -12,6 +12,7 @@ import Inventory from "./pages/Inventory";
 import SupplierOrders from "./pages/SupplierOrders";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import CeoDashboard from "./pages/CeoDashboard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ function AppRoutes() {
       
       {/* Admin routes */}
       <Route path="/" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Index /></ProtectedRoute>} />
+      <Route path="/ceo-dashboard" element={<ProtectedRoute allowedRoles={["ADMIN"]}><CeoDashboard /></ProtectedRoute>} />
       <Route path="/inventory" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Inventory /></ProtectedRoute>} />
       <Route path="/supplier-orders" element={<ProtectedRoute allowedRoles={["ADMIN"]}><SupplierOrders /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute allowedRoles={["ADMIN"]}><Reports /></ProtectedRoute>} />

@@ -2,10 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useProjectDetails, useCertification, useProjectAllocations } from "@/hooks/useProjectDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScorecardEditor } from "@/components/projects/ScorecardEditor";
+import { ProjectWBS } from "@/components/projects/ProjectWBS";
+import { ProjectPayments } from "@/components/projects/ProjectPayments";
 import { ArrowLeft, MapPin, Calendar, User, Cpu } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -57,7 +59,6 @@ export default function ProjectDetail() {
       title={project.name}
       subtitle={`${project.client} — ${project.region}`}
     >
-      {/* Back button */}
       <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="gap-2 mb-4">
         <ArrowLeft className="h-4 w-4" /> Torna ai Cantieri
       </Button>
@@ -69,12 +70,8 @@ export default function ProjectDetail() {
             <MapPin className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Sito</p>
-              <p className="font-medium text-sm text-foreground">
-                {siteName || "Non assegnato"}
-              </p>
-              {siteCity && (
-                <p className="text-xs text-muted-foreground">{siteCity}{siteCountry ? `, ${siteCountry}` : ""}</p>
-              )}
+              <p className="font-medium text-sm text-foreground">{siteName || "Non assegnato"}</p>
+              {siteCity && <p className="text-xs text-muted-foreground">{siteCity}{siteCountry ? `, ${siteCountry}` : ""}</p>}
             </div>
           </CardContent>
         </Card>
@@ -83,9 +80,7 @@ export default function ProjectDetail() {
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Handover</p>
-              <p className="font-medium text-sm text-foreground">
-                {format(new Date(project.handover_date), "dd MMM yyyy", { locale: it })}
-              </p>
+              <p className="font-medium text-sm text-foreground">{format(new Date(project.handover_date), "dd MMM yyyy", { locale: it })}</p>
             </div>
           </CardContent>
         </Card>
@@ -104,12 +99,8 @@ export default function ProjectDetail() {
             <div>
               <p className="text-xs text-muted-foreground">Stato / Tipo</p>
               <div className="flex items-center gap-2 mt-0.5">
-                <Badge variant="outline" className={cn("border text-xs", statusColors[project.status])}>
-                  {project.status}
-                </Badge>
-                {project.project_type && (
-                  <Badge variant="secondary" className="text-xs">{project.project_type}</Badge>
-                )}
+                <Badge variant="outline" className={cn("border text-xs", statusColors[project.status])}>{project.status}</Badge>
+                {project.project_type && <Badge variant="secondary" className="text-xs">{project.project_type}</Badge>}
               </div>
             </div>
           </CardContent>
@@ -117,10 +108,12 @@ export default function ProjectDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={hasCert ? "scorecard" : "hardware"} className="space-y-4">
+      <Tabs defaultValue={hasCert ? "scorecard" : "wbs"} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="hardware">Hardware Allocations</TabsTrigger>
+          <TabsTrigger value="hardware">Hardware</TabsTrigger>
           {hasCert && <TabsTrigger value="scorecard">Scorecard {project.project_type}</TabsTrigger>}
+          <TabsTrigger value="wbs">Cronoprogramma</TabsTrigger>
+          <TabsTrigger value="payments">Pagamenti</TabsTrigger>
         </TabsList>
 
         <TabsContent value="hardware">
@@ -171,12 +164,20 @@ export default function ProjectDetail() {
             ) : (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
-                  Nessuna scorecard trovata per questo progetto. Verrà generata automaticamente alla creazione.
+                  Nessuna scorecard trovata per questo progetto.
                 </CardContent>
               </Card>
             )}
           </TabsContent>
         )}
+
+        <TabsContent value="wbs">
+          <ProjectWBS projectId={projectId!} />
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <ProjectPayments projectId={projectId!} />
+        </TabsContent>
       </Tabs>
     </MainLayout>
   );
