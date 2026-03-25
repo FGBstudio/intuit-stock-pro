@@ -69,16 +69,47 @@ export function useProjectAllocations(projectId: string | undefined) {
   });
 }
 
-export function useSites() {
+export function useSites(brandId?: string) {
   return useQuery({
-    queryKey: ["sites"],
+    queryKey: ["sites", brandId],
+    queryFn: async () => {
+      let query = supabase.from("sites").select("*").order("name");
+      if (brandId) query = query.eq("brand_id", brandId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: brandId ? true : true,
+  });
+}
+
+export function useHoldings() {
+  return useQuery({
+    queryKey: ["holdings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sites")
+        .from("holdings")
         .select("*")
         .order("name");
       if (error) throw error;
       return data || [];
     },
+  });
+}
+
+export function useBrands(holdingId?: string) {
+  return useQuery({
+    queryKey: ["brands", holdingId],
+    queryFn: async () => {
+      if (!holdingId) return [];
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*")
+        .eq("holding_id", holdingId)
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!holdingId,
   });
 }
