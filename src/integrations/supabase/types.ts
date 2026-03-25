@@ -182,6 +182,38 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          created_at: string | null
+          id: string
+          site_id: string | null
+          status: string
+          total_amount: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          site_id?: string | null
+          status?: string
+          total_amount?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          site_id?: string | null
+          status?: string
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holdings: {
         Row: {
           created_at: string
@@ -202,6 +234,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_milestones: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string | null
+          id: string
+          milestone_name: string
+          project_id: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          milestone_name: string
+          project_id?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          milestone_name?: string
+          project_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -301,6 +371,67 @@ export type Database = {
           },
           {
             foreignKeyName: "project_allocations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tasks: {
+        Row: {
+          assigned_to: string | null
+          blocking_payment_id: string | null
+          created_at: string | null
+          dependency_id: string | null
+          end_date: string | null
+          id: string
+          project_id: string | null
+          start_date: string | null
+          status: string
+          task_name: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          blocking_payment_id?: string | null
+          created_at?: string | null
+          dependency_id?: string | null
+          end_date?: string | null
+          id?: string
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          task_name: string
+        }
+        Update: {
+          assigned_to?: string | null
+          blocking_payment_id?: string | null
+          created_at?: string | null
+          dependency_id?: string | null
+          end_date?: string | null
+          id?: string
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          task_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_blocking_payment_id_fkey"
+            columns: ["blocking_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payment_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_dependency_id_fkey"
+            columns: ["dependency_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -467,7 +598,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      view_resource_saturation: {
+        Row: {
+          next_deadline: string | null
+          total_active_tasks: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: {
@@ -489,7 +627,13 @@ export type Database = {
         | "Requested"
         | "Shipped"
         | "Installed_Online"
-      app_role: "ADMIN" | "PM"
+      app_role:
+        | "ADMIN"
+        | "PM"
+        | "document_manager"
+        | "specialist"
+        | "energy_modeler"
+        | "cxa"
       certification_type: "LEED" | "WELL" | "CO2" | "CO2-CO" | "Energy"
       milestone_status: "pending" | "in_progress" | "completed"
       project_status: "Design" | "Construction" | "Completed" | "Cancelled"
@@ -630,7 +774,14 @@ export const Constants = {
         "Shipped",
         "Installed_Online",
       ],
-      app_role: ["ADMIN", "PM"],
+      app_role: [
+        "ADMIN",
+        "PM",
+        "document_manager",
+        "specialist",
+        "energy_modeler",
+        "cxa",
+      ],
       certification_type: ["LEED", "WELL", "CO2", "CO2-CO", "Energy"],
       milestone_status: ["pending", "in_progress", "completed"],
       project_status: ["Design", "Construction", "Completed", "Cancelled"],

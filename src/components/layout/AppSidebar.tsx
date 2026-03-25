@@ -5,6 +5,7 @@ import {
   Truck,
   BarChart3,
   Settings,
+  Crown,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -32,6 +33,7 @@ export function AppSidebar() {
   const mainNavItems = isAdmin
     ? [
         { title: "Command Center", url: "/", icon: LayoutDashboard },
+        { title: "CEO Dashboard", url: "/ceo-dashboard", icon: Crown },
         { title: "Tutti i Cantieri", url: "/projects", icon: FolderKanban },
         { title: "Inventory", url: "/inventory", icon: Package },
         { title: "Supplier Orders", url: "/supplier-orders", icon: Truck },
