@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Package, LogIn, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const ALLOWED_DOMAIN = "fgb-studio.com";
+const ALLOWED_DOMAINS = ["fgbstudio.com", "fgb-studio.com"];
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -22,10 +22,10 @@ export default function Login() {
 
     // Domain check
     const domain = email.split("@")[1]?.toLowerCase();
-    if (domain !== ALLOWED_DOMAIN) {
+    if (!ALLOWED_DOMAINS.includes(domain)) {
       toast({
         title: "Accesso negato",
-        description: `Solo gli utenti con dominio @${ALLOWED_DOMAIN} possono accedere.`,
+        description: "Solo gli utenti con dominio @fgbstudio.com possono accedere.",
         variant: "destructive",
       });
       return;
@@ -53,7 +53,7 @@ export default function Login() {
 
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
           <ShieldAlert className="h-4 w-4 text-muted-foreground shrink-0" />
-          <p className="text-xs text-muted-foreground">Accesso riservato al dominio <span className="font-medium text-foreground">@{ALLOWED_DOMAIN}</span></p>
+          <p className="text-xs text-muted-foreground">Accesso riservato al dominio <span className="font-medium text-foreground">@fgbstudio.com</span></p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
