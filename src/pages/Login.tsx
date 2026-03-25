@@ -4,8 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, LogIn } from "lucide-react";
+import { Package, LogIn, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const ALLOWED_DOMAIN = "fgb-studio.com";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,15 +19,25 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
+    // Domain check
+    const domain = email.split("@")[1]?.toLowerCase();
+    if (domain !== ALLOWED_DOMAIN) {
+      toast({
+        title: "Accesso negato",
+        description: `Solo gli utenti con dominio @${ALLOWED_DOMAIN} possono accedere.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
     const { error } = await signIn(email, password);
     setIsLoading(false);
 
     if (error) {
       toast({ title: "Errore di accesso", description: error.message, variant: "destructive" });
     }
-    // Auth state change will handle redirect
   };
 
   return (
@@ -35,14 +47,19 @@ export default function Login() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <Package className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">FGB Inventory</h1>
-          <p className="text-sm text-muted-foreground">Supply Chain Platform — Access</p>
+          <h1 className="text-2xl font-bold text-foreground">FGB Studio</h1>
+          <p className="text-sm text-muted-foreground">Engine Room — Accesso Interno</p>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+          <ShieldAlert className="h-4 w-4 text-muted-foreground shrink-0" />
+          <p className="text-xs text-muted-foreground">Accesso riservato al dominio <span className="font-medium text-foreground">@{ALLOWED_DOMAIN}</span></p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@azienda.com" required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@fgb-studio.com" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
