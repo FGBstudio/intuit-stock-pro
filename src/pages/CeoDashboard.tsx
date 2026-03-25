@@ -4,10 +4,11 @@ import { useResourceSaturation } from "@/hooks/useResourceSaturation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Users, FolderKanban, DollarSign } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -21,10 +22,10 @@ const statusColors: Record<string, string> = {
 
 export default function CeoDashboard() {
   const navigate = useNavigate();
-  const { data: overduePayments = [], isLoading: loadingPayments } = useAllOverduePayments();
-  const { data: saturation = [], isLoading: loadingSaturation } = useResourceSaturation();
+  const { data: overduePayments = [], isLoading: loadingPayments, isError: errorPayments } = useAllOverduePayments();
+  const { data: saturation = [], isLoading: loadingSaturation, isError: errorSaturation } = useResourceSaturation();
 
-  const { data: activeProjects = [], isLoading: loadingProjects } = useQuery({
+  const { data: activeProjects = [], isLoading: loadingProjects, isError: errorProjects } = useQuery({
     queryKey: ["ceo-active-projects"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,10 +52,14 @@ export default function CeoDashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Pagamenti Scaduti</p>
-              <p className="text-2xl font-bold text-foreground">{overduePayments.length}</p>
-              <p className="text-xs text-muted-foreground">
-                Totale: €{totalOverdueAmount.toLocaleString("it-IT", { minimumFractionDigits: 2 })}
-              </p>
+              {loadingPayments ? <Skeleton className="h-8 w-16" /> : (
+                <>
+                  <p className="text-2xl font-bold text-foreground">{overduePayments.length}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Totale: €{totalOverdueAmount.toLocaleString("it-IT", { minimumFractionDigits: 2 })}
+                  </p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -65,10 +70,14 @@ export default function CeoDashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Risorse Attive</p>
-              <p className="text-2xl font-bold text-foreground">{saturation.length}</p>
-              <p className="text-xs text-muted-foreground">
-                Task totali: {saturation.reduce((s, r) => s + r.total_active_tasks, 0)}
-              </p>
+              {loadingSaturation ? <Skeleton className="h-8 w-16" /> : (
+                <>
+                  <p className="text-2xl font-bold text-foreground">{saturation.length}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Task totali: {saturation.reduce((s, r) => s + r.total_active_tasks, 0)}
+                  </p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -79,7 +88,9 @@ export default function CeoDashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Cantieri Attivi</p>
-              <p className="text-2xl font-bold text-foreground">{activeProjects.length}</p>
+              {loadingProjects ? <Skeleton className="h-8 w-16" /> : (
+                <p className="text-2xl font-bold text-foreground">{activeProjects.length}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -96,30 +107,33 @@ export default function CeoDashboard() {
           </CardHeader>
           <CardContent>
             {loadingPayments ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-              </div>
+              <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+            ) : errorPayments ? (
+              <p className="text-sm text-destructive text-center py-6">Errore nel caricamento dei pagamenti.</p>
             ) : overduePayments.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">Nessun pagamento scaduto 🎉</p>
             ) : (
               <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                {overduePayments.map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-destructive/20 bg-destructive/5">
-                    <div>
-                      <p className="font-medium text-sm text-foreground">{p.milestone_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(p as any).projects?.name || "—"} • {(p as any).projects?.client || ""}
-                      </p>
-                      <p className="text-xs text-destructive mt-0.5">
-                        Scaduto: {p.due_date ? format(new Date(p.due_date), "dd MMM yyyy", { locale: it }) : "—"}
-                      </p>
+                {overduePayments.map((p: any) => {
+                  const daysOverdue = p.due_date ? differenceInDays(new Date(), new Date(p.due_date)) : 0;
+                  return (
+                    <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-destructive/20 bg-destructive/5">
+                      <div>
+                        <p className="font-medium text-sm text-foreground">{p.milestone_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.projects?.name || "—"} • {p.projects?.client || ""}
+                        </p>
+                        <p className="text-xs text-destructive mt-0.5">
+                          Scaduto da {daysOverdue} giorni ({p.due_date ? format(new Date(p.due_date), "dd MMM yyyy", { locale: it }) : "—"})
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-foreground">€{Number(p.amount).toLocaleString("it-IT", { minimumFractionDigits: 2 })}</p>
+                        <Badge variant="outline" className="text-destructive border-destructive/30 text-xs">Scaduto</Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-foreground">€{Number(p.amount).toLocaleString("it-IT", { minimumFractionDigits: 2 })}</p>
-                      <Badge variant="outline" className="text-destructive border-destructive/30 text-xs">Scaduto</Badge>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -135,9 +149,9 @@ export default function CeoDashboard() {
           </CardHeader>
           <CardContent>
             {loadingSaturation ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-              </div>
+              <div className="space-y-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+            ) : errorSaturation ? (
+              <p className="text-sm text-destructive text-center py-6">Errore nel caricamento risorse.</p>
             ) : saturation.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">Nessun task assegnato</p>
             ) : (
@@ -169,9 +183,11 @@ export default function CeoDashboard() {
         </CardHeader>
         <CardContent>
           {loadingProjects ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-            </div>
+            <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : errorProjects ? (
+            <p className="text-sm text-destructive text-center py-6">Errore nel caricamento dei progetti.</p>
+          ) : activeProjects.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Nessun cantiere attivo.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

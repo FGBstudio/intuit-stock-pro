@@ -9,6 +9,25 @@ interface ProtectedRouteProps {
   allowedRoles?: AppRole[];
 }
 
+// Default landing per ruolo
+function getDefaultRoute(role: AppRole | null): string {
+  switch (role) {
+    case "ADMIN":
+      return "/ceo-dashboard";
+    case "PM":
+      return "/projects";
+    case "document_manager":
+    case "specialist":
+    case "energy_modeler":
+    case "cxa":
+      return "/my-tasks";
+    default:
+      return "/login";
+  }
+}
+
+export { getDefaultRoute };
+
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, role, loading } = useAuth();
 
@@ -23,9 +42,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // PM trying to access admin routes → redirect to PM portal
-    if (role === "PM") return <Navigate to="/projects" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to={getDefaultRoute(role)} replace />;
   }
 
   return <>{children}</>;

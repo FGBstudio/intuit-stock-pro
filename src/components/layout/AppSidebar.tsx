@@ -6,6 +6,7 @@ import {
   BarChart3,
   Settings,
   Crown,
+  Inbox,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -24,24 +25,42 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+}
+
 export function AppSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
-  const { isAdmin } = useAuth();
+  const { role } = useAuth();
   const collapsed = state === "collapsed";
 
-  const mainNavItems = isAdmin
-    ? [
-        { title: "Command Center", url: "/", icon: LayoutDashboard },
-        { title: "CEO Dashboard", url: "/ceo-dashboard", icon: Crown },
-        { title: "Tutti i Cantieri", url: "/projects", icon: FolderKanban },
-        { title: "Inventory", url: "/inventory", icon: Package },
-        { title: "Supplier Orders", url: "/supplier-orders", icon: Truck },
-        { title: "Reports", url: "/reports", icon: BarChart3 },
-      ]
-    : [
-        { title: "I Miei Cantieri", url: "/projects", icon: FolderKanban },
-      ];
+  const isAdmin = role === "ADMIN";
+  const isPM = role === "PM";
+  const isOperative = role === "document_manager" || role === "specialist" || role === "energy_modeler" || role === "cxa";
+
+  let mainNavItems: NavItem[] = [];
+
+  if (isAdmin) {
+    mainNavItems = [
+      { title: "CEO Dashboard", url: "/ceo-dashboard", icon: Crown },
+      { title: "Tutti i Cantieri", url: "/projects", icon: FolderKanban },
+      { title: "Magazzino", url: "/inventory", icon: Package },
+      { title: "Ordini Fornitori", url: "/supplier-orders", icon: Truck },
+      { title: "Reports", url: "/reports", icon: BarChart3 },
+    ];
+  } else if (isPM) {
+    mainNavItems = [
+      { title: "I Miei Cantieri", url: "/projects", icon: FolderKanban },
+      { title: "I Miei Task", url: "/my-tasks", icon: Inbox },
+    ];
+  } else if (isOperative) {
+    mainNavItems = [
+      { title: "Inbox / I Miei Task", url: "/my-tasks", icon: Inbox },
+    ];
+  }
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -57,8 +76,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-semibold text-sidebar-foreground">FGB Inventory</span>
-              <span className="text-xs text-sidebar-foreground/60">Supply Chain Platform</span>
+              <span className="font-semibold text-sidebar-foreground">FGB Studio</span>
+              <span className="text-xs text-sidebar-foreground/60">Engine Room</span>
             </div>
           )}
         </div>
@@ -129,7 +148,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="rounded-lg bg-sidebar-accent p-3">
-            <p className="text-xs text-sidebar-foreground/70">FGB Inventory v2.0</p>
+            <p className="text-xs text-sidebar-foreground/70">FGB Engine Room v2.0</p>
           </div>
         )}
       </SidebarFooter>
