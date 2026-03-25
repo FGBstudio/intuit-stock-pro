@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Package, LogIn, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const ALLOWED_DOMAINS = ["fgbstudio.com", "fgb-studio.com"];
+const ALLOWED_DOMAINS = ["fgb-studio.com", "fgbstudio.com"];
 
 export default function Login() {
   const [email, setEmail] = useState("");
